@@ -26,9 +26,8 @@ while pwMatched:
         result = increased
     else:
         ValueError(increased)
-    print(result)
 print("finished!"+" - "+result)
-print("--- %s seconds --- " % str(time.time() - start_time)[:4])
+print("--- %s seconds --- " % round(time.time() - start_time, 2))
 
 # while ok :
 #    print("hello")
