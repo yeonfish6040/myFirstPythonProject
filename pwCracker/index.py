@@ -63,6 +63,7 @@ class MyApp(QWidget):
 
 
     def onStart(self):
+        pwMatched = True
         pwMatch(self, "a", 1, self.lbl, self.inputServer, self.inputUser)
 def pwMatch(self, start, jump, label, serverInput, userInput):
     server = serverInput.text()
@@ -72,7 +73,7 @@ def pwMatch(self, start, jump, label, serverInput, userInput):
     charList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     result = start;
     start_time = time.time()
-    pwMatched = True
+    global pwMatched
     while pwMatched:
         ok = True
         QApplication.processEvents()
