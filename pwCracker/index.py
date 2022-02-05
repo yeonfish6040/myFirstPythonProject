@@ -4,10 +4,7 @@ from PyQt5.QtCore import QBasicTimer
 from PyQt5.QtWidgets import * 
 from PyQt5 import uic 
 from PyQt5.QtCore import *
-from multiprocessing import Process, Queue
-from multiprocessing import Pool
 from pyee import EventEmitter
-import multiprocessing as mp
 
 import sys
 import paramiko
@@ -15,6 +12,7 @@ import os
 import re
 import time
 import functions
+import asyncio
 
 ee = EventEmitter()
 
@@ -75,25 +73,14 @@ class MyApp(QWidget):
         QApplication.processEvents()
         os.execl(sys.executable, '"{}"'.format(sys.executable), *sys.argv)
 
-    def onStart(self):
+    async def onStart(self):
         global pwMatched
         pwMatched = True
-        self.th = runFunction1(self.textbrowser, self.inputServer, self.inputUser)
-        self.th.start()
+        pwMatch("a", 2, self.textbrowser, self.inputServer, self.inputUser, time.time())
+        pwMatch("b", 2, self.textbrowser, self.inputServer, self.inputUser, time.time())
+ 
 
-class runFunction1(QThread):
-    threadEvent = QtCore.pyqtSignal(int)
-
-    def __init__(self, textbrowser, serverInput, userInput):
-        super().__init__()
-        self.textbrowser = textbrowser
-        self.serverInput = serverInput
-        self.userInput = userInput
-    
-    def run(self):
-        pwMatch("a", 1, self.textbrowser, self.serverInput, self.userInput, time.time())
-
-def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
+async def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
     server = serverInput.text()
     user = userInput.text()
     serverInput.setDisabled(True)
@@ -107,7 +94,7 @@ def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
         ok = True
         QApplication.processEvents()
         try:
-            cli.connect(server, port=22, username=user, password=result)
+            await cli.connect(server, port=22, username=user, password=result)
         except paramiko.ssh_exception.AuthenticationException as e:
             ok = False
         cli.close()
