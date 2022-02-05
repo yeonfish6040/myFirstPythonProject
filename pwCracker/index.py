@@ -78,7 +78,7 @@ class MyApp(QWidget):
     def onStart(self):
         global pwMatched
         pwMatched = True
-        self.th = runFunction1(self)
+        self.th = runFunction1(self.textbrowser, self.inputServer, self.inputUser)
         self.th.start()
 
 class runFunction1(QThread):
@@ -86,7 +86,9 @@ class runFunction1(QThread):
 
     def __init__(self, textbrowser, serverInput, userInput):
         super().__init__()
-        self = self
+        self.textbrowser = textbrowser
+        self.serverInput = serverInput
+        self.userInput = userInput
     
     def run(self):
         pwMatch("a", 1, self.textbrowser, self.serverInput, self.userInput, time.time())
