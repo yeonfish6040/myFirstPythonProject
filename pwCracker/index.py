@@ -9,10 +9,8 @@ from pyee import EventEmitter
 import sys
 import paramiko
 import os
-import re
 import time
 import functions
-import asyncio
 
 ee = EventEmitter()
 
