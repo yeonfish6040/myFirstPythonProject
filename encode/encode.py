@@ -43,13 +43,6 @@ class MyApp(QWidget):
         self.buttonEncode.setText('난독화')
         self.buttonEncode.clicked.connect(self.encode)
         self.buttonEncode.move(300, 40)
-        self.buttonEncode.setEnabled(False)
-
-        self.buttonDecode = QPushButton(self)
-        self.buttonDecode.setText('복호화')
-        self.buttonDecode.clicked.connect(self.decode)
-        self.buttonDecode.move(300, 107)
-        self.buttonDecode.setEnabled(False)
 
         self.buttonCopy = QPushButton(self)
         self.buttonCopy.setText('복사')
@@ -60,41 +53,15 @@ class MyApp(QWidget):
         self.setGeometry(1000, 1000, 500, 400)
         self.show()
 
-    def onChanged(self):
-        QApplication.processEvents()
-        chars = functions.allChars()
-        charOk = True
-        for char in self.inputString.text().replace(" ", "』"):
-            if not char in chars:
-                charOk = False
-        for char in self.inputKey.text():
-            if not char in chars:
-                charOk = False
-        if self.inputKey.text() != "" and self.inputString.text() != "" and charOk:
-            self.buttonEncode.setEnabled(True)
-            self.buttonDecode.setEnabled(True)
-        else:
-            self.buttonEncode.setEnabled(False)
-            self.buttonDecode.setEnabled(False)
-        self.lbl1.adjustSize()
-
     def encode(self):
         do_work_encode(self)
-        
-    def decode(self):
-        do_work_decode(self)
 
     def copyText(self):
         pyperclip.copy(self.lbl1.text().replace("복호화된 문자열: ","").replace("난독화된 문자열: ",""))
  
 def do_work_encode(self):
-    result = functions.encode(self.inputString.text().replace(" ", "』"), self.inputKey.text().replace(" ", "』"))
-    self.lbl1.setText("난독화된 문자열: %s" % result.replace("』", " "))
-    self.lbl1.adjustSize()
-    
-def do_work_decode(self):
-    result = functions.decode(self.inputString.text(), self.inputKey.text())
-    self.lbl1.setText("복호화된 문자열: %s" % result.replace("』", " "))
+    result = functions.encode(self.inputString.text(), self.inputKey.text())
+    self.lbl1.setText("난독화된 문자열: %s" % result)
     self.lbl1.adjustSize()
 
 if __name__ == '__main__':
