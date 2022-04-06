@@ -1,13 +1,13 @@
 import socket
 import threading
 import os
-from pyee.base import EventEmitter
+from pyee import EventEmitter
 
 ee = EventEmitter()
 
 
 
-HOST = '192.168.0.51'
+HOST = '0.0.0.0'
 
 PORT = 9999        
   
