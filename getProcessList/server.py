@@ -1,8 +1,6 @@
 import socket
-import select
 import threading
 import os
-from queue import Queue
 from pyee.base import EventEmitter
 
 ee = EventEmitter()
@@ -60,7 +58,6 @@ def work():
             continue
 
 if __name__ == "__main__":
-    q = Queue()
     threading.Thread(target=acceptcnt).start()
     threading.Thread(target=work).start()
     @ee.on('exit')
