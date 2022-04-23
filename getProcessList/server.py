@@ -2,6 +2,12 @@ import socket
 import threading
 import os
 from pyee import EventEmitter
+import winsound as sd
+
+def beepsound():
+    fr = 500    # range : 37 ~ 32767
+    du = 300     # 1000 ms ==1second
+    sd.Beep(fr, du) 
 
 ee = EventEmitter()
 
@@ -22,12 +28,14 @@ server_socket.listen()
 client_socket, addr = server_socket.accept()
 client_socket.sendall("Connected".encode())
 print('Connected by', addr)
+beepsound()
 
 def acceptcnt():
     global server_socket
     global client_socket
     client_socket, addr = server_socket.accept()
     print('Connected by', addr)
+    beepsound()
 
 def run():
     global server_socket
