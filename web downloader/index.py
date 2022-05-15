@@ -22,7 +22,7 @@ if not args.__len__() == 1:
             downloaded = round(current / 1000000, 2)
             totaly = round(total / 1000000, 2)
             speed = round((current / (time.time() - start_time)) / 1000000, 2)
-            if speed == "0.0":
+            if speed == 0.0:
                 left = "N/A"
             else:
                 left = round((totaly - downloaded) / speed, 0)
