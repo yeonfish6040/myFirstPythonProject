@@ -15,19 +15,21 @@ from PyQt5.QtCore import *
 args = sys.argv
 
 if not args.__len__() == 1:
-    def bar_progress(current, total, width=50):
-        progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s" % (current / total * 100, round(current / 1000000, 2), round(total / 1000000, 2), str((current / (time.time() - start_time)) / 1000000)[0:4])
-        sys.stdout.write("\r" + progress_message)
+    def download():
+        def bar_progress(current, total, width=50):
+            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s" % (current / total * 100, round(current / 1000000, 2), round(total / 1000000, 2), str((current / (time.time() - start_time)) / 1000000)[0:4])
+            sys.stdout.write("\r" + progress_message)
+            sys.stdout.flush()
+        global start_time
+        start_time = time.time()
+        path = "C:/Users/%s/Desktop" % os.getlogin()
+        wget.download(args[1], path, bar=bar_progress)
+        finishmsg = "%sDownload Complete! %sseconds%s" % ("="*10, str(round(time.time() - start_time, 2)), "="*10)
+        print("\n"*50)
+        sys.stdout.write("\r" + finishmsg)
         sys.stdout.flush()
-    global start_time
-    start_time = time.time()
-    path = "C:/Users/%s/Desktop" % os.getlogin()
-    wget.download(args[1], path, bar=bar_progress)
-    finishmsg = "%sDownload Complete! %sseconds%s" % ("="*10, str(round(time.time() - start_time, 2)), "="*10)
-    print("\n"*50)
-    sys.stdout.write("\r" + finishmsg)
-    sys.stdout.flush()
-    os.startfile(path)
+        os.startfile(path)
+    threading.Thread(target=download).start()
 else:
     class MyApp(QWidget):
         def __init__(self):
