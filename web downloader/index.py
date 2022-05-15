@@ -3,6 +3,7 @@ import wget
 import time
 import os
 import threading
+import datetime
 
 from queue import Queue
 from PyQt5 import QtCore
@@ -15,9 +16,17 @@ from PyQt5.QtCore import *
 args = sys.argv
 
 if not args.__len__() == 1:
-    def download():
+    def download(args):
         def bar_progress(current, total, width=50):
-            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s" % (current / total * 100, round(current / 1000000, 2), round(total / 1000000, 2), str((current / (time.time() - start_time)) / 1000000)[0:4])
+            percentage = current / total * 100
+            downloaded = round(current / 1000000, 2)
+            totaly = round(total / 1000000, 2)
+            speed = round((current / (time.time() - start_time)) / 1000000, 2)
+            if speed == "0.0":
+                left = "N/A"
+            else:
+                left = round((totaly - downloaded) / speed, 0)
+            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s | %s left" % (percentage, downloaded, totaly, speed, left)
             sys.stdout.write("\r" + progress_message)
             sys.stdout.flush()
         global start_time
@@ -29,7 +38,7 @@ if not args.__len__() == 1:
         sys.stdout.write("\r" + finishmsg)
         sys.stdout.flush()
         os.startfile(path)
-    threading.Thread(target=download).start()
+    threading.Thread(target=download, args=[args]).start()
 else:
     class MyApp(QWidget):
         def __init__(self):
@@ -62,7 +71,7 @@ else:
             self.lblinfo = QLabel(self)
             self.lblinfo.setText("Downloading: 0% [0 mb / 0 mb] | 0 mb/s")
             self.lblinfo.move(0, 100)
-            self.lblinfo.resize(400, 20)
+            self.lblinfo.resize(800, 20)
 
             self.pbar = QProgressBar(self)
             self.pbar.setGeometry(0, 70, 300, 25)
@@ -81,8 +90,12 @@ else:
             self.input.setDisabled(True)
             self.buttonStart.setDisabled(True)
             q = Queue()
-            threading.Thread(target=download, args=[q, self.input.text()]).start()
-            threading.Thread(target=update, args=[q, self]).start()
+            t1 = threading.Thread(target=download, args=[q, self.input.text()])
+            t2 = threading.Thread(target=update, args=[q, self])
+            t1.daemon = True
+            t2.daemon = True
+            t1.start()
+            t2.start()
 
     def update(q, self):
             while True:
@@ -99,7 +112,15 @@ else:
         QApplication.processEvents()
         def bar_progress(current, total, width=50):
             QApplication.processEvents()
-            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s" % (current / total * 100, round(current / 1000000, 2), round(total / 1000000, 2), str((current / (time.time() - start_time)) / 1000000)[0:4])
+            percentage = current / total * 100
+            downloaded = round(current / 1000000, 2)
+            totaly = round(total / 1000000, 2)
+            speed = round((current / (time.time() - start_time)) / 1000000, 2)
+            if speed == 0.0:
+                left = "N/A"
+            else:
+                left = round((totaly - downloaded) / speed, 0)
+            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s | %s seconds left" % (percentage, downloaded, totaly, speed, left)
             q.put([progress_message, current, total])
         start_time = time.time()
         path = "C:/Users/%s/Desktop" % os.getlogin()
