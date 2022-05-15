@@ -1,8 +1,11 @@
 import socket
 import threading
 import os
+import cv2
 from pyee import EventEmitter
 import winsound as sd
+import numpy as np
+import matplotlib.pyplot as plt
 
 def beepsound():
     fr = 500    # range : 37 ~ 32767
@@ -27,17 +30,11 @@ server_socket.listen()
 
 client_socket, addr = server_socket.accept()
 client_socket.sendall("Connected".encode())
-print('Connected by', addr)
+ipAddr = client_socket.recv(1024).decode()
+print('Connected by', ipAddr)
 beepsound()
 
-def acceptcnt():
-    global server_socket
-    global client_socket
-    client_socket, addr = server_socket.accept()
-    print('Connected by', addr)
-    beepsound()
-
-def run():
+def writePsList():
     global server_socket
     global client_socket
     data = client_socket.recv(100000)
@@ -46,6 +43,17 @@ def run():
     f.write(data.decode().replace("psutil.Process(", "").replace(")", "").replace(":-!?!-:%s" % ip, ""))
     print("%s: finished" % ip)
     return data.decode()
+
+def saveScreen():
+    global ipAddr
+    global server_socket
+    global client_socket
+    data = client_socket.recv(800000)
+    # show image using data 
+    img = np.frombuffer(data, dtype=np.uint8)
+    img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+    plt.imshow(img, interpolation='bicubic')
+    plt.show()
 
 def work():
     global server_socket
@@ -57,16 +65,16 @@ def work():
             ee.emit('exit')
         elif inputUser == "list":
             client_socket.sendall("send".encode())
-            run()
+            writePsList()
         elif inputUser == "exitClient":
             client_socket.sendall("exit".encode())
         elif inputUser == "exitApp":
             client_socket.sendall("exitApp".encode())
-        else:
-            continue
+        elif inputUser == "screen":
+            client_socket.sendall("screen".encode())
+            saveScreen()
 
 if __name__ == "__main__":
-    threading.Thread(target=acceptcnt).start()
     threading.Thread(target=work).start()
     @ee.on('exit')
     def exit():

