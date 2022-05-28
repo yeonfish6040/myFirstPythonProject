@@ -8,7 +8,7 @@ import datetime
 from queue import Queue
 from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QBasicTimer
+from PyQt5.QtCore import QBasicTimer, QObject, QThread, pyqtSignal
 from PyQt5.QtWidgets import * 
 from PyQt5 import uic 
 from PyQt5.QtCore import *
@@ -31,7 +31,8 @@ if not args.__len__() == 1:
             sys.stdout.flush()
         global start_time
         start_time = time.time()
-        path = "C:/Users/%s/Desktop" % os.getlogin()
+        # path = "C:/Users/%s/Desktop" % os.getlogin()
+        path = ".\\"
         wget.download(args[1], path, bar=bar_progress)
         finishmsg = "%sDownload Complete! %sseconds%s" % ("="*10, str(round(time.time() - start_time, 2)), "="*10)
         print("\n"*50)
@@ -40,6 +41,35 @@ if not args.__len__() == 1:
         os.startfile(path)
     threading.Thread(target=download, args=[args]).start()
 else:
+
+    class Worker(QObject):
+        finished = pyqtSignal()
+        progress = pyqtSignal(int)
+
+        def run(self, data):
+            QApplication.processEvents()
+            def bar_progress(current, total, width=50):
+                QApplication.processEvents()
+                percentage = current / total * 100
+                downloaded = round(current / 1000000, 2)
+                totaly = round(total / 1000000, 2)
+                speed = round((current / (time.time() - start_time)) / 1000000, 2)
+                if speed == 0.0:
+                    left = "N/A"
+                else:
+                    left = round((totaly - downloaded) / speed, 0)
+                progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s | %s seconds left" % (percentage, downloaded, totaly, speed, left)
+                data.lblinfo.setText(progress_message)
+                data.pbar.setValue(current)
+                data.pbar.setMaximum(total)
+            start_time = time.time()
+            # path = "C:/Users/%s/Desktop" % os.getlogin()
+            path = ".\\"
+            wget.download(data.input.text(), path, bar=bar_progress)
+            finishmsg = "Download Complete! "+str(round(time.time() - start_time, 2))+"seconds"
+            data.lblinfo.setText(finishmsg)
+            
+
     class MyApp(QWidget):
         def __init__(self):
             super().__init__()
@@ -83,51 +113,24 @@ else:
             self.show()
 
         def openFolder(self):
-            path = "C:/Users/%s/Desktop" % os.getlogin()
+            # path = "C:/Users/%s/Desktop" % os.getlogin()
+            path = ".\\"
             os.startfile(path)
 
         def onStart(self):
             self.input.setDisabled(True)
             self.buttonStart.setDisabled(True)
-            q = Queue()
-            t1 = threading.Thread(target=download, args=[q, self.input.text()])
-            t2 = threading.Thread(target=update, args=[q, self])
-            t1.daemon = True
-            t2.daemon = True
-            t1.start()
-            t2.start()
-
-    def update(q, self):
-            while True:
-                QApplication.processEvents()
-                if q.get()[0] == "done":
-                    self.lblinfo.setText(q.get()[1])
-                else:
-                    self.lblinfo.setText(q.get()[0])
-                    self.pbar.setValue(q.get()[1])
-                    self.pbar.setMaximum(q.get()[2])
-
-    def download(q, url):
-        # process event
-        QApplication.processEvents()
-        def bar_progress(current, total, width=50):
-            QApplication.processEvents()
-            percentage = current / total * 100
-            downloaded = round(current / 1000000, 2)
-            totaly = round(total / 1000000, 2)
-            speed = round((current / (time.time() - start_time)) / 1000000, 2)
-            if speed == 0.0:
-                left = "N/A"
-            else:
-                left = round((totaly - downloaded) / speed, 0)
-            progress_message = "Downloading: %d%% [%smb / %smb] | %smb/s | %s seconds left" % (percentage, downloaded, totaly, speed, left)
-            q.put([progress_message, current, total])
-        start_time = time.time()
-        path = "C:/Users/%s/Desktop" % os.getlogin()
-        wget.download(url, path, bar=bar_progress)
-        finishmsg = "Download Complete! "+str(round(time.time() - start_time, 2))+"seconds"
-        q.put(["done", finishmsg])
-
+            self.thread = QThread()
+            self.worker = Worker()
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(lambda: self.worker.run(self))
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.thread.start()
+            self.thread.finished.connect(lambda: self.buttonStart.setDisabled(False))
+            self.thread.finished.connect(lambda: self.input.setDisabled(False))
+            
     app = QApplication(sys.argv)
     window = MyApp()
     window.show()
