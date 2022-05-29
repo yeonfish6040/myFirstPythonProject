@@ -41,11 +41,7 @@ if not args.__len__() == 1:
         os.startfile(path)
     threading.Thread(target=download, args=[args]).start()
 else:
-
     class Worker(QObject):
-        finished = pyqtSignal()
-        progress = pyqtSignal(int)
-
         def run(self, data):
             QApplication.processEvents()
             def bar_progress(current, total, width=50):
@@ -67,7 +63,11 @@ else:
             path = ".\\"
             wget.download(data.input.text(), path, bar=bar_progress)
             finishmsg = "Download Complete! "+str(round(time.time() - start_time, 2))+"seconds"
+            data.buttonStart.setDisabled(False)
+            data.input.setDisabled(False)
             data.lblinfo.setText(finishmsg)
+            data.thread.quit()
+            data.thread.wait()
             
 
     class MyApp(QWidget):
@@ -124,12 +124,7 @@ else:
             self.worker = Worker()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(lambda: self.worker.run(self))
-            self.worker.finished.connect(self.thread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.thread.finished.connect(self.thread.deleteLater)
             self.thread.start()
-            self.thread.finished.connect(lambda: self.buttonStart.setDisabled(False))
-            self.thread.finished.connect(lambda: self.input.setDisabled(False))
             
     app = QApplication(sys.argv)
     window = MyApp()
