@@ -1,7 +1,6 @@
 import socket
-import threading
 import os
-import cv2
+import sys
 from pyee import EventEmitter
 import winsound as sd
 import numpy as np
@@ -48,36 +47,42 @@ def saveScreen():
     global ipAddr
     global server_socket
     global client_socket
-    data = client_socket.recv(800000)
-    # show image using data 
+    dataSize = client_socket.recv(1024)
+    dataSize = int(dataSize.decode())
+    dataShape = client_socket.recv(1024)
+    dataShape = dataShape.decode().split("|")
+    dataShape = (int(dataShape[0]), int(dataShape[1]), int(dataShape[2]))
+    data = client_socket.recv(dataSize)
+    # print size of data
+    print(sys.getsizeof(data))
     img = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-    plt.imshow(img, interpolation='bicubic')
+    img = img.reshape(dataShape)
+    plt.imshow(img)
     plt.show()
 
-def work():
-    global server_socket
-    global client_socket
-    while True:
-        inputUser = input("Input: ") 
-        if inputUser == "exit":
-            client_socket.sendall("exitAll".encode())
-            ee.emit('exit')
-        elif inputUser == "list":
-            client_socket.sendall("send".encode())
-            writePsList()
-        elif inputUser == "exitClient":
-            client_socket.sendall("exit".encode())
-        elif inputUser == "exitApp":
-            client_socket.sendall("exitApp".encode())
-        elif inputUser == "screen":
-            client_socket.sendall("screen".encode())
-            saveScreen()
+@ee.on('exit')
+def exit():
+    # exit program
+    print("exit")
+    os._exit(0)
 
-if __name__ == "__main__":
-    threading.Thread(target=work).start()
-    @ee.on('exit')
-    def exit():
-        # exit program
-        print("exit")
-        os._exit(0)
+while True:
+    if sys.argv.__len__() == 2:
+        if sys.argv[1] == "exit":
+            client_socket.sendall("exitApp".encode())
+            ee.emit('exit')
+    inputUser = input("Input: ") 
+    if inputUser == "exit":
+        client_socket.sendall("exitAll".encode())
+        ee.emit('exit')
+    elif inputUser == "list":
+        client_socket.sendall("send".encode())
+        writePsList()
+    elif inputUser == "exitClient":
+        client_socket.sendall("exit".encode())
+    elif inputUser == "exitApp":
+        client_socket.sendall("exitApp".encode())
+        ee.emit('exit')
+    elif inputUser == "screen":
+        client_socket.sendall("screen".encode())
+        saveScreen()

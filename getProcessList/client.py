@@ -5,10 +5,8 @@ import requests
 import select
 import os
 import pyautogui
-import pickle
-import cv2
+import sys
 from PIL import Image
-from PIL import ImageGrab
 from time import time, sleep
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,8 +64,15 @@ while True:
                     os.makedirs("C:\\Users\\%s\\Documents\\client" % os.getlogin())
                 myScreenshot = pyautogui.screenshot().save("C:\\Users\\%s\\Documents\\client\\sc.png" % os.getlogin())
                 im = Image.open("C:\\Users\\%s\\Documents\\client\\sc.png" % os.getlogin())
-                img_np = np.array(im)
-                print(img_np)
+                img_np = np.array(im, dtype=np.uint8)
+                client_socket.sendall(str(sys.getsizeof(img_np)).encode())
+                shapeOfNp = ""
+                for i in np.shape(img_np):
+                    shapeOfNp = shapeOfNp + str(i) + "|"
+                client_socket.sendall(shapeOfNp.encode())
+                print(sys.getsizeof(img_np))
+                print(np.shape(img_np))
+                sleep(1 - time() % 1)
                 client_socket.sendall(img_np)
 
         # 소켓을 닫습니다.
