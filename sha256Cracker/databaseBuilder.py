@@ -35,7 +35,7 @@ class Worker(QObject):
                 f.write(string+"§"+functions.getHash(string)+"\n")
             with open(db_path, 'r') as f:
                     count = f.readlines().__len__()
-            data.lblcount.setText(string+"\n"+str(count))
+            data.lblcount.setText(string)
             data.lblhash.setText(functions.getHash(string))
 
 class MyApp(QWidget):
