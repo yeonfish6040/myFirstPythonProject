@@ -27,6 +27,7 @@ server_socket.bind((HOST, PORT))
 
 server_socket.listen()
 
+# make client_socket to array and switch current socket to it if it need
 client_socket, addr = server_socket.accept()
 client_socket.sendall("Connected".encode())
 ipAddr = client_socket.recv(1024).decode()
